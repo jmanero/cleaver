@@ -21,7 +21,7 @@ module Machete
         begin
           Machete::Config.from_file(Dir.pwd)
           Machete::Log.level = options["log_level"] unless(options["log_level"].nil?)
-        rescue Exception => e
+        rescue => e
           Machete::Log.error(e)
         end
       end
@@ -41,7 +41,6 @@ module Machete
       
       register Machete::CLI::Cookbook, "cookbook", "cookbook <COMMAND>", "Manage cookbook"
       register Machete::CLI::Environment, "environment", "environment <COMMAND>", "Manage environments"
-#      register ThorSCMVersion::Tasks, "version", "version <COMMAND>", "Manage environment versioning"
     end
   end
 end

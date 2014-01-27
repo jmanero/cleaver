@@ -12,15 +12,18 @@ module Machete
       end
 
       def install
+        Machete::Log.info("Installing cookbooks")
         resolver = Berkshelf::Resolver.new(@cookbooks, :sources => @cookbooks.sources)
         @cookbooks.cache = resolver.resolve
-          
+
+        Machete::Log.info("Install complete")
         Machete::Log.notify("Install Complete", "Cookbooks")
       end
 
       def upload(options={}, &block)
         install()
-#        Machete::Log.notify("Starting Upload", "Cookbooks")
+        Machete::Log.info("Uploading cookbooks")
+        Machete::Log.notify("Uploading cookbooks", "Cookbooks")
 
         filter_to_upload(@cookbooks.cache, options).each do |cookbook|
           @clusters.each do |cluster|
@@ -38,7 +41,8 @@ module Machete
           end
         end
 
-#        Machete::Log.notify("Upload Complete", "Cookbooks")
+        Machete::Log.info("Upload Complete")
+        Machete::Log.notify("Upload Complete", "Cookbooks")
       end
 
       def delete(cookbook, version=nil, options={})
