@@ -1,0 +1,10 @@
+.buildpath
+.project
+
+.vagrant
+ca
+
+Berksfile.lock
+.chef/validator.pem
+.chef/client.pem
+.berkshelf/*
