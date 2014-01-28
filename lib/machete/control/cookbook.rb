@@ -28,7 +28,7 @@ module Machete
       end
 
       def upload(clusters, options={})
-        filter_to_upload(@cookbooks.cache, options).each do |cookbook|
+        filter_cookbooks(@cookbooks.cache, options).each do |cookbook|
           clusters.each do |name, cluster|
             next unless(options[:cluster].empty? || options[:cluster].include?(name))
             Machete::Log.info("Uploading #{ cookbook.cookbook_name } (#{ cookbook.version }) to #{ cluster.client.server_url }")
@@ -79,7 +79,7 @@ module Machete
       ## Boosted from https://github.com/berkshelf/berkshelf/blob/ <<
       # dc1638c979ded01123d3c0669118f00a96fb1cbf/lib/berkshelf/berksfile.rb#L676
       ## ref github/tags/3.0.0.beta5
-      def filter_to_upload(cookbooks, options={})
+      def filter_cookbooks(cookbooks, options={})
         unless options[:cookbooks].nil? || options[:cookbooks].empty?
           explicit = cookbooks.select { |cookbook| options[:cookbooks].include?(cookbook.cookbook_name) }
 

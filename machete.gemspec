@@ -20,6 +20,7 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake"
+  spec.add_development_dependency "thor-scmversion"
 
   spec.add_dependency "berkshelf", "= 2.0.12"
   spec.add_dependency "colorize"
