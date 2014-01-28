@@ -110,6 +110,10 @@ module Machete
         @entities[name] = value
       end
       
+      def includes?(name)
+        @entities.key?(name)
+      end
+      
       def delete(name)
         @entities.delete(name)
       end

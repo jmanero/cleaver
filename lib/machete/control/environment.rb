@@ -36,8 +36,8 @@ module Machete
         end
 
         ## Use ThorSCMVersion to tag things
-        current_version.write_version
         Machete::Log.debug("Creating new environment #{ current_version }")
+        current_version.write_version
 
         Machete::Log.info("Saving environment #{ current_version }")
         new_entity.save
@@ -52,7 +52,7 @@ module Machete
         ThorSCMVersion::ShellUtils.sh("git push || true")
         ThorSCMVersion::ShellUtils.sh("git push --tags || true")
 
-        Machete::Log.info("Successfuly created environment #{ current_version }")
+        Machete::Log.notify("Environment", "Successfuly created environment #{ current_version }")
         @environments.environment(current_version.to_s, new_entity)
       end
     end

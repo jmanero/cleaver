@@ -25,7 +25,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "colorize"
   spec.add_dependency "growl"
   spec.add_dependency "ridley", "= 1.5.3"
-  spec.add_dependency "thor", "= 0.18.1"
   spec.add_dependency "thor-scmversion", "= 1.4.0"
-
 end

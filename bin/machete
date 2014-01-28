@@ -2,5 +2,6 @@
 
 $:.unshift File.join(File.dirname(__FILE__), "lib")
 require "machete/cli"
+require "machete/log"
 
-Machete::CLI::Base.start
+Machete::CLI::Tasks.start(ARGV)

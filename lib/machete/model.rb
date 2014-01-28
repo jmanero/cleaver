@@ -27,6 +27,7 @@ module Machete
     dispatch :site, :cookbooks
     dispatch :environment, :environments
     dispatch :universe, :universes
+
     attr_reader :cookbooks
     attr_reader :environments
     attr_reader :universes

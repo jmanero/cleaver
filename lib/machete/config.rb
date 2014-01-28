@@ -32,9 +32,9 @@ module Machete
         pwd.join(".machete")
       end
 
-      def from_file(root, conf="Machetefile")
+      def from_file(root=nil, conf="Machetefile")
         pwd = root; conf_file = conf
-        throw "Configuration could not be read from #{ file_path })!" unless File.exist?(file_path)
+        throw Errno::ENOENT, "Configuration could not be read from #{ file_path })!" unless File.exist?(file_path)
 
         ## Load Machetefile DSL
         Machete.model.instance_exec do

@@ -2,6 +2,7 @@
 # Class: Machete::Model::Cookbooks
 #
 require "berkshelf"
+require "fileutils"
 require "pathname"
 
 module Machete
@@ -72,7 +73,7 @@ module Machete
 
         options[:path] &&= Machete::Config.relative(options[:path])
         options[:constraint] = constraint
-        @entities[name] = Cookbook.new(self, name, options)
+        @entities[name.to_sym] = Cookbook.new(self, name.to_s, options)
       end
 
       private

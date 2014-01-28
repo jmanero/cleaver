@@ -47,7 +47,7 @@ module Machete
       end
 
       def environment(name, options={})
-        @entities[name] = if(options.is_a?(Environment))
+        @entities[name.to_sym] = if(options.is_a?(Environment))
           options
         else
           Environment.new(self, name, versions)
