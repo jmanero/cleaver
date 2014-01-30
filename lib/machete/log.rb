@@ -40,10 +40,10 @@ module Machete
 
       def error(e)
         case e
-          when Machete::CLI::CLIError
+          when MacheteError
             log(LEVELS.last, e.message)
           when Exception
-            log(LEVELS.last, "#{ e.backtrace.shift }: #{ e.message }", e.backtrace)
+            log(LEVELS.last, "#{ e.class }: #{ e.message }", e.backtrace)
           else
             log(LEVELS.last, e)
         end

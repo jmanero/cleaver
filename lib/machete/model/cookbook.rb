@@ -42,10 +42,6 @@ module Machete
         @entities.values
       end
 
-      def versions
-        Hash[@cache.map {|c| [c.cookbook_name, c.version] }]
-      end
-
       def initialize(model)
         @storage_path = Machete::Config.store.join("cookbooks")
         initialize_filesystem
@@ -54,6 +50,18 @@ module Machete
         @downloader = Berkshelf::Downloader.new(@store)
         @cache = []
         super(model)
+      end
+
+      def current
+        Hash[@cache.map do |c|
+          _name = c.cookbook_name.to_sym;
+          _params = { :version => c.version }
+
+          ## Get parameters from configuration
+          _params.merge!(@entities[_name].to_hash) if(includes?(_name))
+
+          [_name, _params]
+        end]
       end
 
       ## DSL
@@ -72,7 +80,7 @@ module Machete
         end
 
         options[:path] &&= Machete::Config.relative(options[:path])
-        options[:constraint] = constraint
+        options[:constraint] = constraint unless(constraint.nil?)
         @entities[name.to_sym] = Cookbook.new(self, name.to_s, options)
       end
 

@@ -10,27 +10,36 @@ module Machete
     class Environment < Machete::Model::Entity
       attribute :name
       attribute :description
-      attribute :versions
-      export :name, :description, :versions
+      attribute :cookbooks
+
+      export :name, :description, :cookbooks
       def initialize(collection, name, options={})
         @collection = collection
         @name = name
-
-        @description = options[:description] || "Create release version #{ name }"
-        @versions = options[:versions] || {}
+        
+        @description = options[:description] || "Release version #{ name }"
+        @cookbooks = options[:cookbooks] || {}
       end
 
       def ==(compare)
         return false unless(compare.is_a?(Environment))
-        versions == compare.versions
+        cookbooks == compare.cookbooks
       end
 
       def file_path
         @collection.storage_path.join("#{ name }.json")
       end
 
-      def git_path
+      def relative_path
         File.join(".machete/environments", "#{ name }.json")
+      end
+
+      def chef_hash
+        {
+          :name => name.gsub(".", "_"),
+          :description => description,
+          :cookbook_versions => Hash[@cookbooks.map {|c| [c[0], "= #{c[1][:version]}"] }]
+        }
       end
 
       def save
@@ -50,7 +59,7 @@ module Machete
         @entities[name.to_sym] = if(options.is_a?(Environment))
           options
         else
-          Environment.new(self, name, versions)
+          Environment.new(self, name, options)
         end
       end
 
@@ -58,7 +67,8 @@ module Machete
         Dir.glob(storage_path.join("*.json")) do |file|
           name = File.basename(file, ".json")
           source = IO.read(storage_path.join(file))
-          @entities[name] = Environment.new(self, name, JSON.parse(source, :symbolize_names => true))
+          
+          @entities[name] = Machete::Model::Environment.new(self, name, JSON.parse(source, :symbolize_names => true))
         end
 
         self

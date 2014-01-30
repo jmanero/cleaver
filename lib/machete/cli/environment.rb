@@ -26,7 +26,7 @@ module Machete
       option :prerelease_type, :kind_of => String, :default => "alpha", :alias => :p
 
       def create(type=:patch)
-        @controller.create(type, options.symbolize_keys)
+        @controller.create(type, options)
       end
     end
   end

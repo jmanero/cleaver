@@ -7,21 +7,34 @@ module Machete
   module Control
     class Cookbook
       def initialize(model)
+        @model = model
         @cookbooks = model.cookbooks
         @environments = model.environments
       end
 
-      def install(env=nil)
-        Machete::Log.info("Using environment #{ env }") unless(env.nil?)
+      def install(envname=nil)
+        Machete::Log.info("Using environment #{ envname }") unless(envname.nil?)
         Machete::Log.info("Installing cookbooks")
-        
-        if(env && @environments.includes?(env))
-          @environments[env].versions.each do |name, version|
-            @cookbooks.cookbook(name, "= #{version}")
+
+        cookbooks = if(envname && @environments.includes?(envname))
+          ## Create a new Cookbook collection for the specified environment
+          collection = Machete::Model::Cookbooks.new(@model)
+          @environments[envname].cookbooks.each do |name, cookbook|
+            cookbook = cookbook.dup
+            
+            ## Fix attributes
+            cookbook[:constraint] = "= #{cookbook.delete(:version)}"
+            cookbook.delete(:name)
+            
+            collection.cookbook(name, nil, cookbook)
           end
+
+          collection
+        else
+          @cookbooks
         end
-        
-        resolver = Berkshelf::Resolver.new(@cookbooks, :sources => @cookbooks.sources)
+
+        resolver = Berkshelf::Resolver.new(cookbooks, :sources => cookbooks.sources)
         @cookbooks.cache = resolver.resolve
 
         Machete::Log.notify("Cookbooks", "Cookbook install complete")
@@ -31,14 +44,14 @@ module Machete
         filter_cookbooks(@cookbooks.cache, options).each do |cookbook|
           clusters.each do |name, cluster|
             next unless(options[:cluster].empty? || options[:cluster].include?(name))
-            Machete::Log.info("Uploading #{ cookbook.cookbook_name } (#{ cookbook.version }) to #{ cluster.client.server_url }")
+            Machete::Log.info("Uploading #{ cookbook.cookbook_name } (#{ cookbook.version }) to #{ cluster.client.server_url } (#{ name })")
 
             begin
               cluster.client.cookbook.upload(cookbook.path, options.merge({ name: cookbook.cookbook_name }))
             rescue Ridley::Errors::FrozenCookbook => ex
               Machete::Log.debug("Cookbook #{ cookbook.cookbook_name } is frozen on #{ cluster.client.server_url }")
               if options[:halt_on_frozen]
-                raise Berkshelf::FrozenCookbook, ex
+                raise MacheteError, "Cookbook #{ cookbook.cookbook_name } is frozen on #{ cluster.client.server_url }"
               end
             end
           end

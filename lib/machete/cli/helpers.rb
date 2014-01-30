@@ -1,9 +1,5 @@
 module Machete
   module CLI
-    class CLIError < StandardError
-      ## Don't print traces for these
-    end
-
     module Helpers
       ## Define an option: `--name value`
       def option(name, argopts={})
@@ -100,21 +96,21 @@ module Machete
             next
           end
 
-          raise CLIError, "Unhandled flag `#{arg}`!"
+          raise MacheteError, "Unhandled flag `#{arg}`!"
         end
       end
 
       def command
         return if(argv.empty?) ## Nothing to see here
         return _handle_subcommand(argv.shift) if(_has_subcommand?(argv.first))
-        raise CLIError, "Unhandled argument `#{argv.first}`!"
+        raise MacheteError, "Unhandled argument `#{argv.first}`!"
       end
 
       private
 
       def _validate(name, value, options={})
-        raise CLIError, "Argument #{name} must be a #{options[:kind_of]}" unless(!options[:kind_of].is_a?(Class) || value.is_a?(options[:kind_of]))
-        raise CLIError, "Argument #{name} must be one of #{options[:one_of]}" unless(!options[:one_of].is_a?(Array) || options[:one_of].include?(value))
+        raise MacheteError, "Argument #{name} must be a #{options[:kind_of]}" unless(!options[:kind_of].is_a?(Class) || value.is_a?(options[:kind_of]))
+        raise MacheteError, "Argument #{name} must be one of #{options[:one_of]}" unless(!options[:one_of].is_a?(Array) || options[:one_of].include?(value))
       end
 
       def _has_option?(name)
