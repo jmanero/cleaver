@@ -53,7 +53,7 @@ module Machete
       end
 
       def upload(clusters, envname)
-        raise MacheteError, "Undefined environment #{ envname }" unless(@environments.includes?(envname))
+        raise MacheteError, "Undefined environment #{ envname }" unless(exist?(envname))
         env = @environments[envname]
 
         clusters.each do |name, cluster|
@@ -66,6 +66,10 @@ module Machete
             end
           end
         end
+      end
+      
+      def exist?(envname)
+        @environments.include?(envname)
       end
 
       private

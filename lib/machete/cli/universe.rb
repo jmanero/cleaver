@@ -28,6 +28,10 @@ module Machete
       def noop
         puts "Universe #{options}"
       end
+      
+      def apply(environment)
+        @controller.apply(environment, options)
+      end
 
       def upload(environment=nil, *cookbooks)
         options[:cookbooks] = cookbooks

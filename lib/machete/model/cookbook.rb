@@ -58,7 +58,7 @@ module Machete
           _params = { :version => c.version }
 
           ## Get parameters from configuration
-          _params.merge!(@entities[_name].to_hash) if(includes?(_name))
+          _params.merge!(@entities[_name].to_hash) if(include?(_name))
 
           [_name, _params]
         end]

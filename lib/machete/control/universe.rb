@@ -9,11 +9,24 @@ module Machete
     class Universe
       def initialize(name, model)
         @name = name
-        raise MacheteError, "Universe #{ name } is not defined" unless(Machete.model.universes.includes?(name))
+        raise MacheteError, "Universe #{ name } is not defined" unless(Machete.model.universes.include?(name))
 
         @universe = Machete.model.universes[name]
         @cookbook_controller = Machete::Control::Cookbook.new(Machete.model)
         @environment_controller = Machete::Control::Environment.new(Machete.model)
+      end
+      
+      def apply(envname, options={})
+        raise MacheteError, "Undefined environment #{ envname }" unless(@environment_controller.exist?(envname))
+        upload(envname, options)
+        
+        @universe.clusters.each do |name, cluster|
+          cluster.client.node.all.each do |node|
+            Machete::Log.info("Setting node #{ node.name }'s environment to #{ envname } (#{ envname.gsub(".", "_") })")
+            node.chef_environment = envname.gsub(".", "_")
+            node.save
+          end
+        end
       end
 
       def upload(envname=nil, options={})

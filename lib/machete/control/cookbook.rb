@@ -16,7 +16,7 @@ module Machete
         Machete::Log.info("Using environment #{ envname }") unless(envname.nil?)
         Machete::Log.info("Installing cookbooks")
 
-        cookbooks = if(envname && @environments.includes?(envname))
+        cookbooks = if(envname && @environments.include?(envname))
           ## Create a new Cookbook collection for the specified environment
           collection = Machete::Model::Cookbooks.new(@model)
           @environments[envname].cookbooks.each do |name, cookbook|

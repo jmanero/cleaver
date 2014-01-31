@@ -102,8 +102,10 @@ module Machete
 
       def command
         return if(argv.empty?) ## Nothing to see here
-        return _handle_subcommand(argv.shift) if(_has_subcommand?(argv.first))
-        raise MacheteError, "Unhandled argument `#{argv.first}`!"
+        raise MacheteError, "Unhandled argument `#{argv.first}`!" if(!_has_subcommand?(argv.first))
+
+        flags
+        _handle_subcommand(argv.shift)
       end
 
       private

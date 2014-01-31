@@ -110,7 +110,7 @@ module Machete
         @entities[name] = value
       end
       
-      def includes?(name)
+      def include?(name)
         @entities.key?(name)
       end
       
