@@ -21,11 +21,11 @@ module Machete
           collection = Machete::Model::Cookbooks.new(@model)
           @environments[envname].cookbooks.each do |name, cookbook|
             cookbook = cookbook.dup
-            
+
             ## Fix attributes
             cookbook[:constraint] = "= #{cookbook.delete(:version)}"
             cookbook.delete(:name)
-            
+
             collection.cookbook(name, nil, cookbook)
           end
 
@@ -42,12 +42,18 @@ module Machete
 
       def upload(clusters, options={})
         filter_cookbooks(@cookbooks.cache, options).each do |cookbook|
+          _options = options.dup
+          _options[:name] = cookbook.cookbook_name
+
+          ## Force cookbooks from local path
+        _options[:force] ||= @cookbooks[cookbook.cookbook_name.to_sym].location.is_a?(Berkshelf::PathLocation) rescue false
+
           clusters.each do |name, cluster|
             next unless(options[:cluster].empty? || options[:cluster].include?(name))
             Machete::Log.info("Uploading #{ cookbook.cookbook_name } (#{ cookbook.version }) to #{ cluster.client.server_url } (#{ name })")
 
             begin
-              cluster.client.cookbook.upload(cookbook.path, options.merge({ name: cookbook.cookbook_name }))
+              cluster.client.cookbook.upload(cookbook.path, _options)
             rescue Ridley::Errors::FrozenCookbook => ex
               Machete::Log.debug("Cookbook #{ cookbook.cookbook_name } is frozen on #{ cluster.client.server_url }")
               if options[:halt_on_frozen]
