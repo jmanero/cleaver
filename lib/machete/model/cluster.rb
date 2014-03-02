@@ -32,11 +32,5 @@ module Machete
       export :name, :server_url, :admin_client,
       :admin_client_key, :validation_client, :validation_client_key
     end
-
-    class Clusters < Machete::Model::Collection
-      dispatch :cluster, Machete::Model::Cluster, :create do |cluster|
-        @entities[cluster.name] = cluster
-      end
-    end
   end
 end

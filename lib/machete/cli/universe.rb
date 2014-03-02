@@ -6,16 +6,11 @@ require "machete/control/universe"
 module Machete
   module CLI
     class Universe < Machete::CLI::Base
+      def initialize(argv, _options)
+        @universe = argv.shift.to_sym
+        Machete::Log.info("Using universe #{ @universe }")
 
-      attr_reader :controller
-      def initialize(*args)
-        super(*args)
-        @controller = Machete::Control::Universe.new(options[:universe], Machete.model)
-      end
-
-      def arguments(universe)
-        options[:universe] = universe.to_sym
-        Machete::Log.debug("Using universe #{universe}")
+        super(argv, _options)
       end
 
       flag :force, :alias => :f
@@ -28,23 +23,23 @@ module Machete
       def noop
         puts "Universe #{options}"
       end
-      
-      def apply(environment)
-        @controller.apply(environment, options)
-      end
 
-      def upload(environment=nil, *cookbooks)
+      #      def apply(environment)
+      #        Machete::Control::Universe.apply(environment, options)
+      #      end
+
+      def upload(version=nil, *cookbooks)
         options[:cookbooks] = cookbooks
         options[:freeze] = !options[:no_freeze]
-        @controller.upload(environment, options)
+        Machete::Control::Universe.upload(@universe, version, options)
       end
 
       def delete(cookbook, version=nil)
-        @controller.delete(cookbook, version, options)
+        Machete::Control::Universe.delete(@universe, cookbook, version, options)
       end
-      
+
       def delete_all
-        @controller.delete_all(options)
+        Machete::Control::Universe.delete_all(@universe, options)
       end
     end
   end

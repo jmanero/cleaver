@@ -37,7 +37,7 @@ module Machete
         raise MacheteError, "Configuration could not be read from #{ file_path })!" unless File.exist?(file_path)
 
         ## Load Machetefile DSL
-        Machete.model.instance_exec do
+        Machete::Model.instance_exec do
           eval(IO.read(Machete::Config.file_path), binding, Machete::Config.file_path.to_s, 1)
         end
         Machete::Log.info("Using #{file_path}")

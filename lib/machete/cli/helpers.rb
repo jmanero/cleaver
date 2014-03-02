@@ -74,11 +74,6 @@ module Machete
         @argv = args
 
         flags
-        _handle_subcommand(:arguments) ## handle static arguments after flags
-      end
-
-      ## Override to capture one or more elements of ARGV before flags
-      def arguments
       end
 
       def flags
@@ -104,7 +99,6 @@ module Machete
         return if(argv.empty?) ## Nothing to see here
         raise MacheteError, "Unhandled argument `#{argv.first}`!" if(!_has_subcommand?(argv.first))
 
-        flags
         _handle_subcommand(argv.shift)
       end
 

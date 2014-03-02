@@ -6,16 +6,9 @@ require "machete/control/environment"
 module Machete
   module CLI
     class Environment < Machete::CLI::Base
-
-      attr_reader :controller
-      def initialize(*args)
-        super(*args)
-        @controller = Machete::Control::Environment.new(Machete.model)
-      end
-
       def list
         puts " --- Environments ---"
-        Machete.model.environments.each do |name, env|
+        Machete::Model::Environment.load_all.each do |name, env|
           printf " * %s  -  %s\n", name, env.description
         end
         puts ""
@@ -26,7 +19,7 @@ module Machete
       option :prerelease_type, :kind_of => String, :default => "alpha", :alias => :p
 
       def create(type=:patch)
-        @controller.create(type, options)
+        Machete::Control::Environment.create(type, options)
       end
     end
   end

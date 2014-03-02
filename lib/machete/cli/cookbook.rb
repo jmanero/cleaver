@@ -6,19 +6,12 @@ require "machete/control/cookbook"
 module Machete
   module CLI
     class Cookbook < Machete::CLI::Base
-
-      attr_reader :controller
-      def initialize(*args)
-        super(*args)
-        @controller = Machete::Control::Cookbook.new(Machete.model)
-      end
-
       def install(environment=nil)
-        @controller.install(environment)
+        Machete::Control::Cookbook.install(environment)
       end
 
       def clear()
-        @controller.clear()
+        Machete::Control::Cookbook.clear()
       end
     end
   end

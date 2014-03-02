@@ -70,6 +70,10 @@ module Machete
     class Entity
       extend Machete::Model::Helpers
       class << self
+        def collection
+            @collection ||= Machete::Model::Collection.new()
+        end
+              
         def create(*args, &block)
           entity = self.new(*args)
           entity.instance_exec(&block) if(block)
@@ -93,29 +97,36 @@ module Machete
     class Collection
       extend Machete::Model::Helpers
       attr_reader :entities
-      def initialize(model)
-        @model = model
+      def initialize
         @entities = {}
       end
-
+      
       def each(&block)
         @entities.each{|k,v| block.call(k, v)}
       end
       
       def [](name)
-        @entities[name]
+        @entities[name.to_sym]
       end
       
       def []=(name, value)
-        @entities[name] = value
+        @entities[name.to_sym] = value
       end
       
       def include?(name)
-        @entities.key?(name)
+        @entities.key?(name.to_sym)
       end
       
       def delete(name)
-        @entities.delete(name)
+        @entities.delete(name.to_sym)
+      end
+      
+      def keys
+        @entities.keys
+      end
+      
+      def values
+        @entities.values
       end
 
       def to_hash
