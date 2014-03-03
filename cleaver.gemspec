@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "cleaver"
-  spec.version       = IO.read(File.expand_path('VERSION', __FILE__)) rescue "0.0.1"
+  spec.version       = IO.read(File.expand_path('../VERSION', __FILE__)) rescue "0.0.1"
   spec.authors       = ["John Manero"]
   spec.email         = ["jmanero@dyn.com"]
   spec.description   = %q{Manage the lifecycle of a deployment with Chef}
