@@ -1,13 +1,13 @@
 ##
-# Class: Machete::Model::Environment
+# Class: Cleaver::Model::Environment
 #
 require "fileutils"
 require "json"
 require "pathname"
 
-module Machete
-  class Model
-    class Environment < Machete::Model::Entity
+module Cleaver
+  module Model
+    class Environment < Cleaver::Model::Entity
       class << self
         def load(name)
           source = IO.read(storage_path.join("#{ name }.json"))
@@ -27,7 +27,7 @@ module Machete
         end
 
         def storage_path
-          Machete::Config.store.join("environments")
+          Cleaver.store.join("environments")
         end
 
         def initialize_filesystem
@@ -62,11 +62,11 @@ module Machete
       end
 
       def relative_path
-        File.join(".machete/environments", "#{ name }.json")
+        File.join(".cleaver/environments", "#{ name }.json")
       end
 
       def cookbook_shelf
-        shelf = Machete::Model::Cookbook::Shelf.new
+        shelf = Cleaver::Model::Cookbook::Shelf.new
         cookbooks.each do |name, cookbook|
           cookbook = cookbook.dup
 

@@ -1,11 +1,11 @@
 ##
-# Class: Machete::Model::Universe
+# Class: Cleaver::Model::Universe
 #
-require "machete/model/cluster"
+require "cleaver/model/cluster"
 
-module Machete
-  class Model
-    class Universe < Machete::Model::Entity
+module Cleaver
+  module Model
+    class Universe < Cleaver::Model::Entity
       class << self
         def universe(name, &block)
           entity = Universe.new(name)
@@ -33,7 +33,7 @@ module Machete
 
       def initialize(name)
         @name = name
-        @clusters = Machete::Model::Collection.new()
+        @clusters = Cleaver::Model::Collection.new()
       end
 
       export :name, :clusters

@@ -1,14 +1,14 @@
 ##
-# Class Machete::CLI::Cookbook
+# Class Cleaver::CLI::Cookbook
 #
-require "machete/control/environment"
+require "cleaver/control/environment"
 
-module Machete
+module Cleaver
   module CLI
-    class Environment < Machete::CLI::Base
+    class Environment < Cleaver::CLI::Base
       def list
         puts " --- Environments ---"
-        Machete::Model::Environment.load_all.each do |name, env|
+        Cleaver::Model::Environment.load_all.each do |name, env|
           printf " * %s  -  %s\n", name, env.description
         end
         puts ""
@@ -19,7 +19,7 @@ module Machete
       option :prerelease_type, :kind_of => String, :default => "alpha", :alias => :p
 
       def create(type=:patch)
-        Machete::Control::Environment.create(type, options)
+        Cleaver::Control::Environment.create(type, options)
       end
     end
   end

@@ -1,4 +1,4 @@
-module Machete
+module Cleaver
   module CLI
     module Helpers
       ## Define an option: `--name value`
@@ -50,13 +50,13 @@ module Machete
     end
 
     class Base
-      extend Machete::CLI::Helpers
+      extend Cleaver::CLI::Helpers
       class << self
         def start(*argv)
           begin
             new(argv.flatten.dup).command
           rescue => e
-            Machete::Log.error(e)
+            Cleaver::Log.error(e)
           end
         end
 
@@ -91,13 +91,13 @@ module Machete
             next
           end
 
-          raise MacheteError, "Unhandled flag `#{arg}`!"
+          raise CleaverError, "Unhandled flag `#{arg}`!"
         end
       end
 
       def command
         return if(argv.empty?) ## Nothing to see here
-        raise MacheteError, "Unhandled argument `#{argv.first}`!" if(!_has_subcommand?(argv.first))
+        raise CleaverError, "Unhandled argument `#{argv.first}`!" if(!_has_subcommand?(argv.first))
 
         _handle_subcommand(argv.shift)
       end
@@ -105,8 +105,8 @@ module Machete
       private
 
       def _validate(name, value, options={})
-        raise MacheteError, "Argument #{name} must be a #{options[:kind_of]}" unless(!options[:kind_of].is_a?(Class) || value.is_a?(options[:kind_of]))
-        raise MacheteError, "Argument #{name} must be one of #{options[:one_of]}" unless(!options[:one_of].is_a?(Array) || options[:one_of].include?(value))
+        raise CleaverError, "Argument #{name} must be a #{options[:kind_of]}" unless(!options[:kind_of].is_a?(Class) || value.is_a?(options[:kind_of]))
+        raise CleaverError, "Argument #{name} must be one of #{options[:one_of]}" unless(!options[:one_of].is_a?(Array) || options[:one_of].include?(value))
       end
 
       def _has_option?(name)

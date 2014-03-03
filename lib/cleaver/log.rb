@@ -1,12 +1,12 @@
 ##
-# Class: Machete::Log
+# Class: Cleaver::Log
 #
 require "berkshelf"
 require "colorize"
 require "growl"
 require "json"
 
-module Machete
+module Cleaver
   module Log
     LEVELS = [ :debug, :info, :warn, :error ]
 
@@ -21,7 +21,7 @@ module Machete
       class << self
         def render(l, m, trace=nil)
           mcolor = _color(l.to_sym)
-          puts "[#{ Time.now }] ".white + "Machete (#{ l }): ".magenta + m.send(mcolor)
+          puts "[#{ Time.now }] ".white + "Cleaver (#{ l }): ".magenta + m.send(mcolor)
           trace.each{|t| puts "    #{ t }".send(mcolor) } unless(trace.nil?)
         end
         private
@@ -40,7 +40,7 @@ module Machete
 
       def error(e)
         case e
-          when MacheteError
+          when CleaverError
             log(LEVELS.last, e.message)
           when Exception
             log(LEVELS.last, "#{ e.class }: #{ e.message }", e.backtrace)
@@ -52,14 +52,14 @@ module Machete
       ## Auto-handle custom levels
       def method_missing(m, *args)
         super unless(LEVELS.include?(m))
-        Machete::Log.log(m, *args)
+        Cleaver::Log.log(m, *args)
       end
 
       def notify(from, message)
         Log.info(message)
 
         return unless(Growl.installed?)
-        Growl.notify message, :icon => File.expand_path("../../doc/icon_small.png", File.dirname(__FILE__)), :title => "Machete - #{ from }"
+        Growl.notify message, :icon => File.expand_path("../../doc/icon_small.png", File.dirname(__FILE__)), :title => "Cleaver - #{ from }"
       end
 
       def level=(value=nil)
@@ -74,7 +74,7 @@ module Machete
 
       def formatter=(value=nil)
         @formatter = value.to_sym unless(value.nil?)
-        @formatter ||= Machete::Log::Console
+        @formatter ||= Cleaver::Log::Console
       end
       alias_method :formatter, :formatter=
 
@@ -101,18 +101,18 @@ end
 ## Hijack the Berkshelf logger
 module Berkshelf::UI
   def say(message="", *args)
-    Machete::Log.log(:debug, message)
+    Cleaver::Log.log(:debug, message)
   end
 
   def info(message="", *args)
-    Machete::Log.log(:info, message)
+    Cleaver::Log.log(:info, message)
   end
 
   def warn(message="", *args)
-    Machete::Log.log(:warn, message)
+    Cleaver::Log.log(:warn, message)
   end
 
   def error(message="", *args)
-    Machete::Log.log(:error, message)
+    Cleaver::Log.log(:error, message)
   end
 end

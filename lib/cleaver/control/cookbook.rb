@@ -1,50 +1,50 @@
 ##
-# Class: Machete::Control::Cookbook
+# Class: Cleaver::Control::Cookbook
 #
 require "berkshelf"
-require "machete/model"
+require "cleaver/model"
 
-module Machete
+module Cleaver
   module Control
-    class Cookbook
+    module Cookbook
       class << self
         def install(version=nil)
-          Machete::Log.info("Installing cookbooks")
+          Cleaver::Log.info("Installing cookbooks")
 
           cookbooks = unless(version.nil?)
-            unless(Machete::Model::Environment.exist?(version))
-              return Machete::Log.error("Environment #{ version } does not exist!")
+            unless(Cleaver::Model::Environment.exist?(version))
+              return Cleaver::Log.error("Environment #{ version } does not exist!")
             end
 
-            Machete::Log.info("Using environment #{ version }")
-            Machete::Model::Environment.load(version).cookbook_shelf
+            Cleaver::Log.info("Using environment #{ version }")
+            Cleaver::Model::Environment.load(version).cookbook_shelf
           else
-            Machete::Model::Cookbook
+            Cleaver::Model::Cookbook
           end
 
           resolver = Berkshelf::Resolver.new(cookbooks, :sources => cookbooks.sources)
           cookbooks.cache.push(*(resolver.resolve))
 
-          Machete::Log.notify("Cookbooks", "Cookbook install complete")
+          Cleaver::Log.notify("Cookbooks", "Cookbook install complete")
         end
 
         def upload(clusters, options={})
-          filter_cookbooks(Machete::Model::Cookbook.cache, options).each do |cookbook|
+          filter_cookbooks(Cleaver::Model::Cookbook.cache, options).each do |cookbook|
             _options = options.dup
             _options[:name] = cookbook.cookbook_name
 
             ## Force cookbooks from local path
-            _options[:force] ||= Machete::Model::Cookbook.collection[cookbook.cookbook_name].location.is_a?(Berkshelf::PathLocation) rescue false
+            _options[:force] ||= Cleaver::Model::Cookbook.collection[cookbook.cookbook_name].location.is_a?(Berkshelf::PathLocation) rescue false
 
             filter_clusters(clusters, options).each do |name, cluster|
-              Machete::Log.info("Uploading #{ cookbook.cookbook_name } (#{ cookbook.version }) to #{ cluster.client.server_url } (#{ name })")
+              Cleaver::Log.info("Uploading #{ cookbook.cookbook_name } (#{ cookbook.version }) to #{ cluster.client.server_url } (#{ name })")
 
               begin
                 cluster.client.cookbook.upload(cookbook.path, _options)
               rescue Ridley::Errors::FrozenCookbook => ex
-                Machete::Log.debug("Cookbook #{ cookbook.cookbook_name } is frozen on #{ cluster.client.server_url }")
+                Cleaver::Log.debug("Cookbook #{ cookbook.cookbook_name } is frozen on #{ cluster.client.server_url }")
                 if options[:halt_on_frozen]
-                  raise MacheteError, "Cookbook #{ cookbook.cookbook_name } is frozen on #{ cluster.client.server_url }"
+                  raise CleaverError, "Cookbook #{ cookbook.cookbook_name } is frozen on #{ cluster.client.server_url }"
                 end
               end
             end
@@ -54,10 +54,10 @@ module Machete
         def delete(clusters, cookbook, version=nil, options={})
           filter_clusters(clusters, options).each do |name, cluster|
             if(version.nil?)
-              Machete::Log.info("Deleting all versions of #{ cookbook } from #{ cluster.server_url }")
+              Cleaver::Log.info("Deleting all versions of #{ cookbook } from #{ cluster.server_url }")
               cluster.client.cookbook.delete_all(cookbook, options)
             else
-              Machete::Log.info("Deleting version #{ version } of #{ cookbook } from #{ cluster.server_url }")
+              Cleaver::Log.info("Deleting version #{ version } of #{ cookbook } from #{ cluster.server_url }")
               cluster.client.cookbook.delete(cookbook, version, options)
             end
           end
@@ -66,7 +66,7 @@ module Machete
         def delete_all(clusters, options={})
           filter_clusters(clusters, options).each do |name, cluster|
             cluster.client.cookbook.all.each do |name, versions|
-              Machete::Log.info("Deleting all versions of #{ name } from
+              Cleaver::Log.info("Deleting all versions of #{ name } from
          #{ cluster.server_url }")
               cluster.client.cookbook.delete_all(name, options)
             end
@@ -74,8 +74,8 @@ module Machete
         end
 
         def clear
-          Machete::Model::Cookbook.storage_path.each_child {|c| FileUtils.rm_rf(c)}
-          Machete::Log.info("Cookbook cache cleared")
+          Cleaver::Model::Cookbook.storage_path.each_child {|c| FileUtils.rm_rf(c)}
+          Cleaver::Log.info("Cookbook cache cleared")
         end
 
         def filter_clusters(clusters, options={})

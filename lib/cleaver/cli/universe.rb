@@ -1,14 +1,14 @@
 ##
-# Class Machete::CLI::Universe
+# Class Cleaver::CLI::Universe
 #
-require "machete/control/universe"
+require "cleaver/control/universe"
 
-module Machete
+module Cleaver
   module CLI
-    class Universe < Machete::CLI::Base
+    class Universe < Cleaver::CLI::Base
       def initialize(argv, _options)
         @universe = argv.shift.to_sym
-        Machete::Log.info("Using universe #{ @universe }")
+        Cleaver::Log.info("Using universe #{ @universe }")
 
         super(argv, _options)
       end
@@ -25,21 +25,21 @@ module Machete
       end
 
       #      def apply(environment)
-      #        Machete::Control::Universe.apply(environment, options)
+      #        Cleaver::Control::Universe.apply(environment, options)
       #      end
 
       def upload(version=nil, *cookbooks)
         options[:cookbooks] = cookbooks
         options[:freeze] = !options[:no_freeze]
-        Machete::Control::Universe.upload(@universe, version, options)
+        Cleaver::Control::Universe.upload(@universe, version, options)
       end
 
       def delete(cookbook, version=nil)
-        Machete::Control::Universe.delete(@universe, cookbook, version, options)
+        Cleaver::Control::Universe.delete(@universe, cookbook, version, options)
       end
 
       def delete_all
-        Machete::Control::Universe.delete_all(@universe, options)
+        Cleaver::Control::Universe.delete_all(@universe, options)
       end
     end
   end

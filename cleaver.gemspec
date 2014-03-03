@@ -1,11 +1,10 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'machete/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "machete"
-  spec.version       = Machete::VERSION
+  spec.name          = "cleaver"
+  spec.version       = IO.read(File.expand_path('VERSION', __FILE__)) rescue "0.0.1"
   spec.authors       = ["John Manero"]
   spec.email         = ["jmanero@dyn.com"]
   spec.description   = %q{Manage the lifecycle of a deployment with Chef}

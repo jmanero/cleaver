@@ -1,11 +1,11 @@
 ##
-# Class: Machete::Model::Cluster
+# Class: Cleaver::Model::Cluster
 #
 require "ridley"
 
-module Machete
-  class Model
-    class Cluster < Machete::Model::Entity
+module Cleaver
+  module Model
+    class Cluster < Cleaver::Model::Entity
       attribute :name
       attribute :server_url
       attribute :ssl_verify

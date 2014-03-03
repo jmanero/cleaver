@@ -1,28 +1,28 @@
 ##
-# Class: Machete::Model::Cookbooks
+# Class: Cleaver::Model::Cookbooks
 #
 require "berkshelf"
 require "fileutils"
 require "pathname"
 
-module Machete
-  class Model
+module Cleaver
+  module Model
     class Cookbook < Berkshelf::CookbookSource
       module IShelf
-        extend Machete::Model::Helpers
+        extend Cleaver::Model::Helpers
         def cookbook(name, constraint=nil, options={})
           if(constraint.is_a?(Hash))
             options = constraint
             constraint = nil
           end
 
-          options[:path] &&= Machete::Config.relative(options[:path])
+          options[:path] &&= Cleaver.directory.join(options[:path])
           options[:constraint] = constraint unless(constraint.nil?)
 
           collection[name] = Cookbook.new(self, name.to_s, options)
         end
 
-        dispatch :filepath, Machete::Config, :file_path
+        dispatch :filepath, Cleaver, :file
 
         def sources
           collection.values
@@ -30,25 +30,28 @@ module Machete
 
         ## Getters
         def collection
-          @collection ||= Machete::Model::Collection.new
+          @collection ||= Cleaver::Model::Collection.new
+        end
+
+        def cache
+          Cookbook.cache
+        end
+
+        def downloader
+          Cookbook.downloader
+        end
+
+        def store
+          Cookbook.store
+        end
+
+        def current
+          Cookbook.current
         end
       end
 
       class Shelf
         include IShelf
-        
-        def cache
-          Cookbook.cache
-        end
-        def downloader
-          Cookbook.downloader
-        end
-        def store
-          Cookbook.store
-        end
-        def current
-          Cookbook.current
-        end
       end
 
       class << self
@@ -78,11 +81,11 @@ module Machete
         end
 
         def file_path
-          Machete::Config.store.to_s
+          Cleaver.store.to_s
         end
 
         def storage_path
-          Machete::Config.store.join("cookbooks")
+          Cleaver.store.join("cookbooks")
         end
 
         def initialize_filesystem
@@ -97,7 +100,7 @@ module Machete
 
       module DSL
         def site(uri)
-          Machete::Model::Cookbook.downloader.add_location(:site, uri)
+          Cleaver::Model::Cookbook.downloader.add_location(:site, uri)
         end
 
         def chef_api(value, options = {})

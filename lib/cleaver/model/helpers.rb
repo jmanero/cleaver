@@ -1,10 +1,10 @@
 ##
-# Class: Machete::Config::DSL
+# Class: Cleaver::Model::Helpers
 #
 require "json"
 
-module Machete
-  class Model
+module Cleaver
+  module Model
     module Helpers
       ## Define getters and setters for an attribute.
       # TODO Add validation handling like Chef LWRPs
@@ -68,10 +68,10 @@ module Machete
     end
 
     class Entity
-      extend Machete::Model::Helpers
+      extend Cleaver::Model::Helpers
       class << self
         def collection
-            @collection ||= Machete::Model::Collection.new()
+            @collection ||= Cleaver::Model::Collection.new()
         end
               
         def create(*args, &block)
@@ -95,7 +95,7 @@ module Machete
     end
 
     class Collection
-      extend Machete::Model::Helpers
+      extend Cleaver::Model::Helpers
       attr_reader :entities
       def initialize
         @entities = {}
