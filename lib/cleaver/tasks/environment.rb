@@ -12,10 +12,14 @@ module Cleaver
     class Environment < Thor
       desc "list", "Print a list of the current versioned environments"
       def list
-        Model::Environment.load_all.each do |name, env|
-          printf " * %s  -  %s\n", name, env.description
+        Model::Environment.load_all.values.sort{ |a,b| a.version <=> b.version }.each do |env|
+          printf " %-24s %s\n", env.name, env.description
         end
-        puts ""
+      end
+      
+      desc "latest", "Print the latest environment name"
+      def latest
+        say Control::Environment.latest
       end
 
       option :force, :type => :boolean, :aliases => :f

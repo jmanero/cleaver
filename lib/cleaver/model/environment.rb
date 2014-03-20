@@ -4,6 +4,8 @@
 require "fileutils"
 require "json"
 require "pathname"
+require "thor-scmversion/prerelease"
+require "thor-scmversion/scm_version"
 require "cleaver/model/entity"
 
 module Cleaver
@@ -19,11 +21,9 @@ module Cleaver
         end
 
         def load_all
-          Hash[Dir.glob(storage_path.join("*.json")).map do |file|
-            name = File.basename(file, ".json")
+          Dir.glob(storage_path.join("*.json")).each { |file| load(File.basename(file, ".json")) }
 
-            [name, load(name)]
-          end]
+          collection
         end
 
         def exist?(name)
@@ -49,9 +49,12 @@ module Cleaver
       attribute :cookbooks
 
       export :name, :description, :cookbooks
+      
+      attr_reader :version
 
       def initialize(name, options = {})
         @name = name
+        @version = ThorSCMVersion::ScmVersion.from_tag(name)
         @description = options[:description] || "Version #{ name }"
         @cookbooks = options[:cookbooks] || {}
       end

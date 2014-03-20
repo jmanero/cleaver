@@ -58,6 +58,10 @@ module Cleaver
             end
           end
         end
+        
+        def latest
+          current_version
+        end
 
         private
 

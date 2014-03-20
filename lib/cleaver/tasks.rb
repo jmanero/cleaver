@@ -12,9 +12,21 @@ module Cleaver
       class_option :log_level, :type => :string, :aliases => :l
       class_option :cluster, :type => :array, :aliases => :c
 
+      ##
+      # Show nodes in the universe
+      ##
+      desc "show UNIVERSE", "Show all nodes in the universe"
+      def show(name)
+        find_and_print_nodes(name)
+      end
+
+      ##
+      # Set a collection of nodes' environments
+      ##
       option :force, :type => :boolean, :aliases => :f
       option :search, :type => :string, :aliases => :s
-      desc "apply VERSION", "Set universe nodes' environments to VERSION"
+      desc "apply UNIVERSE VERSION", "Set universe nodes' environments to VERSION"
+
       def apply(name, version, *selected_nodes)
         say "Updating the following nodes to environment #{ version }:"
         nodes = find_and_print_nodes(name, options, selected_nodes.flatten)
@@ -25,9 +37,12 @@ module Cleaver
         Cleaver.log.error(e)
       end
 
+      ##
+      # Migrate a collection of nodes from one environment to another
+      ##
       option :force, :type => :boolean, :aliases => :f
       option :search, :type => :string, :aliases => :s
-      desc "migrate FROM TO", "Set universe nodes' currently in environment FROM to environment TO"
+      desc "migrate UNIVERSE FROM TO", "Set universe nodes' currently in environment FROM to environment TO"
 
       def migrate(name, from_version, to_version, *selected_nodes)
         say "Updating the following nodes from environment #{ from_version } to environment #{ to_version }:"
@@ -40,6 +55,9 @@ module Cleaver
         Control::Universe.apply(name, to_version, nodes, options) { |m| Cleaver.log.info(m) }
       end
 
+      ##
+      # Upload cookbooks and environments to the chef servers
+      ##
       option :force, :type => :boolean, :aliases => :f
       option :no_freeze, :type => :boolean
       option :halt_on_frozen, :type => :boolean
@@ -55,6 +73,9 @@ module Cleaver
         Cleaver.log.error(e)
       end
 
+      ##
+      # Delete a cookbook from the chef servers
+      ##
       option :force, :type => :boolean, :aliases => :f
       desc "delete UNIVERSE COOKBOOK [VERSION]", "Remove a cookbook from the universe's chef servers"
 
@@ -64,6 +85,9 @@ module Cleaver
         Cleaver.log.error(e)
       end
 
+      ##
+      # !!! Delete all cookbooks from the chef servers
+      ##
       option :force, :type => :boolean, :aliases => :f
       desc "delete_all UNIVERSE", "Remove all cookbooks from the universe's chef servers"
 
@@ -73,12 +97,13 @@ module Cleaver
         Cleaver.log.error(e)
       end
 
+      ## Rwgister Submodules
       register Cleaver::Tasks::Cookbook, :cookbook, "cookbook <COMMAND>", "Manage cookbooks"
       register Cleaver::Tasks::Environment, :env, "env <COMMAND>", "Manage environments"
 
       private
 
-      def find_and_print_nodes(name, options, selected_nodes)
+      def find_and_print_nodes(name, options = {}, selected_nodes = [])
         clusters = Control::Universe.select_clusters(name, options)
         nodes = []
 
@@ -92,12 +117,13 @@ module Cleaver
           unless cluster_nodes.nil? || cluster_nodes.empty?
             nodes.push(*cluster_nodes)
 
-            say " -------- Cluster #{ _ } (#{ cluster.client.server_url }) --------"
+            say " -------- Cluster #{ _ } (#{ cluster.client.server_url }) --------".green
             cluster_nodes.each do |node|
-              say "   * #{ node.name } (#{ node.chef_environment })"
+              
+              printf "   %-18s %-16s %d\n", node.name, node.chef_environment, 0
             end
 
-            say " ----------------"
+            say " ----------------".green
             puts ""
           end
         end
