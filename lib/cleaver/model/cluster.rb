@@ -2,6 +2,7 @@
 # Class: Cleaver::Model::Cluster
 #
 require "ridley"
+require "cleaver/model/entity"
 
 module Cleaver
   module Model

@@ -4,6 +4,7 @@
 require "fileutils"
 require "json"
 require "pathname"
+require "cleaver/model/entity"
 
 module Cleaver
   module Model

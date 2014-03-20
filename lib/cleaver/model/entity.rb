@@ -1,3 +1,5 @@
+require "cleaver/model/helpers"
+
 module Cleaver
   module Model
     ##

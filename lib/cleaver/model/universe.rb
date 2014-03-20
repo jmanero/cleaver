@@ -2,6 +2,7 @@
 # Class: Cleaver::Model::Universe
 #
 require "cleaver/model/cluster"
+require "cleaver/model/entity"
 
 module Cleaver
   module Model

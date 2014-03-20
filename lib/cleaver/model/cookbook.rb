@@ -4,6 +4,7 @@
 require "berkshelf"
 require "fileutils"
 require "pathname"
+require "cleaver/model/entity"
 
 module Cleaver
   module Model
