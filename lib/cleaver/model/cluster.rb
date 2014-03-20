@@ -31,13 +31,8 @@ module Cleaver
       end
 
       def nodes(select = nil)
-        if select.nil? || select.empty?
-          ## Fetch all nodes in the cluster
-          client.node.all.map { |node| node.reload }
-        else
-          ## Fetch specific nodes
-          select.map { |node| client.node.find(node) }.select { |node| !node.nil? }
-        end
+        query = select.nil? || select.empty? ? "*:*" : select.map { |s| "name:#{ s }"}.join(" ")
+        client.search(:node, query)
       end
 
       export :name, :server_url, :admin_client,
