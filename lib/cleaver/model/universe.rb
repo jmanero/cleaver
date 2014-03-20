@@ -5,16 +5,22 @@ require "cleaver/model/cluster"
 
 module Cleaver
   module Model
+    ##
+    # Universe Entoty
+    ##
     class Universe < Cleaver::Model::Entity
       class << self
         def universe(name, &block)
           entity = Universe.new(name)
-          entity.instance_exec(&block) if(block)
+          entity.instance_exec(&block) if block
 
-          Universe.collection[name] = entity.complete
+          Universe[name] = entity.complete
         end
       end
 
+      ##
+      # Cleaverfile DSL for Universe
+      ##
       module DSL
         def universe(*args, &block)
           Universe.universe(*args, &block)
@@ -26,14 +32,14 @@ module Cleaver
 
       def cluster(name, &block)
         entity = Cluster.new(name)
-        entity.instance_exec(&block) if(block)
+        entity.instance_exec(&block) if block
 
         @clusters[name] = entity.complete
       end
 
       def initialize(name)
         @name = name
-        @clusters = Cleaver::Model::Collection.new()
+        @clusters = Cleaver::Model::Collection.new
       end
 
       export :name, :clusters

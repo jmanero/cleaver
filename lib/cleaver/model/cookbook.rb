@@ -7,17 +7,23 @@ require "pathname"
 
 module Cleaver
   module Model
+    ##
+    # Cookbook Entity
+    ##
     class Cookbook < Berkshelf::CookbookSource
+      ##
+      # Shelf Interface
+      ##
       module IShelf
         extend Cleaver::Model::Helpers
-        def cookbook(name, constraint=nil, options={})
-          if(constraint.is_a?(Hash))
+        def cookbook(name, constraint = nil, options = {})
+          if constraint.is_a?(Hash)
             options = constraint
             constraint = nil
           end
 
           options[:path] &&= Cleaver.directory.join(options[:path])
-          options[:constraint] = constraint unless(constraint.nil?)
+          options[:constraint] = constraint unless constraint.nil?
 
           collection[name] = Cookbook.new(self, name.to_s, options)
         end
@@ -28,11 +34,16 @@ module Cleaver
           collection.values
         end
 
-        ## Getters
         def collection
           @collection ||= Cleaver::Model::Collection.new
         end
+      end
 
+      ##
+      # Cookbook Shelf Entity
+      ##
+      class Shelf
+        include IShelf
         def cache
           Cookbook.cache
         end
@@ -48,10 +59,6 @@ module Cleaver
         def current
           Cookbook.current
         end
-      end
-
-      class Shelf
-        include IShelf
       end
 
       class << self
@@ -70,11 +77,11 @@ module Cleaver
 
         def current
           Hash[cache.map do |c|
-            _name = c.cookbook_name.to_sym;
+            _name = c.cookbook_name.to_sym
             _params = { :version => c.version }
 
             ## Get parameters from configuration
-            _params.merge!(collection[_name].to_hash) if(collection.include?(_name))
+            _params.merge!(collection[_name].to_hash) if collection.include?(_name)
 
             [_name, _params]
           end]
@@ -92,19 +99,22 @@ module Cleaver
           FileUtils.mkdir_p(storage_path, :mode => 0755)
 
           unless File.writable?(storage_path)
-            raise InsufficientPrivledges, "You do not have permission to write to '#{storage_path}'! " <<
+            fail Cleaver::Error, "You do not have permission to write to '#{storage_path}'! " <<
             "Please either chown the directory or use a different location."
           end
         end
       end
 
+      ##
+      # Cleaverfile Cookbook DLS
+      ##
       module DSL
         def site(uri)
           Cleaver::Model::Cookbook.downloader.add_location(:site, uri)
         end
 
         def chef_api(value, options = {})
-          Cookbook.downloader.add_location(:chef_api, value, options={})
+          Cookbook.downloader.add_location(:chef_api, value, options)
         end
 
         def cookbook(*args)
@@ -115,7 +125,7 @@ module Cleaver
       def to_hash
         {
           :name => name,
-          :constraint => version_constraint.to_s,
+          :constraint => version_constraint.to_s
         }.tap do |h|
           if location.kind_of?(Berkshelf::SiteLocation)
             h[:site] = location.api_uri if location.api_uri != CommunityREST::V1_API

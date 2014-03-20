@@ -1,0 +1,26 @@
+StringLiterals:
+  EnforcedStyle: double_quotes
+Encoding:
+  Enabled: false
+LineLength:
+  Enabled: false
+HashSyntax:
+  Enabled: false
+RescueModifier:
+  Enabled: false
+RegexpLiteral:
+  Enabled: false
+Attr:
+  Enabled: false
+MethodLength:
+  Max: 30
+AlignParameters:
+  Enabled: false
+Eval:
+  Enabled: false
+EndAlignment:
+  Enabled: false
+CaseIndentation:
+  Enabled: false
+CyclomaticComplexity:
+  Max: 8

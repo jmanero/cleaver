@@ -1,6 +1,7 @@
 ##
 # Class: Cleaver::Control::Cookbook
 #
+require "thor"
 require "thor-scmversion"
 require "cleaver/control/cookbook"
 require "cleaver/model/cookbook"
@@ -8,58 +9,52 @@ require "cleaver/model/environment"
 
 module Cleaver
   module Control
+    ##
+    # Environment Controller
+    ##
     module Environment
+      include Thor::Actions
       class << self
-        def create(type=:patch, options={})
+        def create(type = :patch, options = {})
           options[:prerelease_type] ||= "alpha"
-          Cleaver::Control::Cookbook.install ## Populate the Cache
-          options[:cookbooks] = Cleaver::Model::Cookbook.current
 
-          Cleaver::Log.info("Using current environment #{ current_version }")
+          Control::Cookbook.install ## Populate the Cache
+          options["cookbooks"] = Model::Cookbook.current
 
-          current_entity = Cleaver::Model::Environment.load(current_version.to_s)
+          yield "Using current environment #{ current_version }"  if block_given?
+
+          current_entity = Model::Environment.load(current_version.to_s)
           current_version.bump!(type, options)
-          new_entity = Cleaver::Model::Environment.new(current_version.to_s, options)
+          new_entity = Model::Environment.new(current_version.to_s, options)
 
-          if(!options[:force] && new_entity == current_entity)
-            raise CleaverError, "Cookbook versions have not changed!"
-          end
-          Cleaver::Log.info("Creating new #{ type } version")
+          fail Cleaver::Error, "Cookbook versions have not changed!" if !options[:force] && new_entity == current_entity
+          yield "Creating new #{ type } version #{ current_version }" if block_given?
 
           ## Use ThorSCMVersion to tag things
           current_version.write_version
 
-          Cleaver::Log.info("Saving environment #{ current_version }")
+          yield "Saving environment #{ current_version }" if block_given?
           new_entity.save
 
-          Cleaver::Log.info("Trying to update git repository")
-          Cleaver::Log.debug("git add #{ new_entity.relative_path }")
-          ThorSCMVersion::ShellUtils.sh("git add #{ new_entity.relative_path }")
-          
-          Cleaver::Log.debug("git commit -m 'Release #{ current_version }: #{ new_entity.description }'")
-          ThorSCMVersion::ShellUtils.sh("git commit -m 'Release #{ current_version }: #{ new_entity.description }'")
-          
-          Cleaver::Log.debug("git tag -a -m 'Release #{ current_version }: #{ new_entity.description }' #{ current_version }")
-          ThorSCMVersion::ShellUtils.sh("git tag -a -m 'Release #{ current_version }: #{ new_entity.description }' #{ current_version }")
-          
-          ThorSCMVersion::ShellUtils.sh("git push || true")
-          ThorSCMVersion::ShellUtils.sh("git push --tags || true")
+          run "git add #{ new_entity.relative_path }", :capture => true
+          run "git commit -m 'Release #{ current_version }: #{ new_entity.description }'", :capture => true
+          run "git tag -a -m 'Release #{ current_version }: #{ new_entity.description }' #{ current_version }", :capture => true
+          run "git push", :capture => true
+          run "git push --tags", :capture => true
 
-          Cleaver::Log.notify("Environment", "Successfuly created environment #{ current_version }")
+          yield "Successfuly created environment #{ current_version }" if block_given?
         end
 
         def upload(clusters, name)
-          raise CleaverError, "Undefined environment #{ name }" unless(Cleaver::Model::Environment.exist?(name))
-          environment = Cleaver::Model::Environment.load(name)
+          fail Cleaver::Error, "Undefined environment #{ name }" unless Model::Environment.exist?(name)
+          Model::Environment.load(name)
 
           clusters.each do |_, cluster|
-            Cleaver::Log.info("Uploading environment #{ name } to #{ cluster.client.server_url } (#{ _ })")
-            unless(environment.nil?)
-              begin
-                cluster.client.environment.update(environment.chef_hash)
-              rescue Ridley::Errors::HTTPNotFound => e
-                cluster.client.environment.create(environment.chef_hash)
-              end
+            yield "Uploading environment #{ name } to #{ cluster.client.server_url } (#{ _ })" if block_given?
+            begin
+              cluster.client.environment.update(Model::Environment[name].chef_hash)
+            rescue Ridley::Errors::HTTPNotFound
+              cluster.client.environment.create(Model::Environment[name].chef_hash)
             end
           end
         end

@@ -6,100 +6,87 @@ require "cleaver/model"
 
 module Cleaver
   module Control
+    ##
+    # Cookbook Controller
+    ##
     module Cookbook
       class << self
-        def install(version=nil)
-          Cleaver::Log.info("Installing cookbooks")
+        def install(version = nil)
+          yield "Installing cookbooks" if block_given?
 
-          cookbooks = unless(version.nil?)
-            unless(Cleaver::Model::Environment.exist?(version))
-              return Cleaver::Log.error("Environment #{ version } does not exist!")
-            end
-
-            Cleaver::Log.info("Using environment #{ version }")
-            Cleaver::Model::Environment.load(version).cookbook_shelf
-          else
+          ## Get the right bookshelf
+          cookbooks = if version.nil?
             Cleaver::Model::Cookbook
+          else
+            fail Cleaver::Error, "Environment #{ version } does not exist!" unless Model::Environment.exist?(version)
+            yield "Using environment #{ version }" if block_given?
+            Model::Environment.load(version).cookbook_shelf
           end
 
+          ## Do black magic to fetch cookbooks
           resolver = Berkshelf::Resolver.new(cookbooks, :sources => cookbooks.sources)
           cookbooks.cache.push(*(resolver.resolve))
 
-          Cleaver::Log.notify("Cookbooks", "Cookbook install complete")
+          yield "Cookbook install complete" if block_given?
         end
 
-        def upload(clusters, options={})
+        def upload(clusters, options = {})
           filter_cookbooks(Cleaver::Model::Cookbook.cache, options).each do |cookbook|
-            _options = options.dup
-            _options[:name] = cookbook.cookbook_name
+            options = options.dup
+            options["name"] = cookbook.cookbook_name
 
-            ## Force cookbooks from local path
-            _options[:force] ||= Cleaver::Model::Cookbook.collection[cookbook.cookbook_name].location.is_a?(Berkshelf::PathLocation) rescue false
+            ## Force upload cookbooks from local path
+            options["force"] ||= Cleaver::Model::Cookbook.collection[cookbook.cookbook_name].location.is_a?(Berkshelf::PathLocation) rescue false
 
-            filter_clusters(clusters, options).each do |name, cluster|
-              Cleaver::Log.info("Uploading #{ cookbook.cookbook_name } (#{ cookbook.version }) to #{ cluster.client.server_url } (#{ name })")
+            clusters.each do |name, cluster|
+              yield "Uploading #{ cookbook.cookbook_name } (#{ cookbook.version }) to #{ cluster.client.server_url } (#{ name })" if block_given?
 
               begin
-                cluster.client.cookbook.upload(cookbook.path, _options)
-              rescue Ridley::Errors::FrozenCookbook => ex
-                Cleaver::Log.debug("Cookbook #{ cookbook.cookbook_name } is frozen on #{ cluster.client.server_url }")
-                if options[:halt_on_frozen]
-                  raise CleaverError, "Cookbook #{ cookbook.cookbook_name } is frozen on #{ cluster.client.server_url }"
-                end
+                cluster.client.cookbook.upload(cookbook.path, options)
+              rescue Ridley::Errors::FrozenCookbook
+                raise Cleaver::Error, "Cookbook #{ cookbook.cookbook_name } is frozen on #{ cluster.client.server_url }" if options["halt_on_frozen"]
               end
             end
           end
         end
 
-        def delete(clusters, cookbook, version=nil, options={})
-          filter_clusters(clusters, options).each do |name, cluster|
-            if(version.nil?)
-              Cleaver::Log.info("Deleting all versions of #{ cookbook } from #{ cluster.server_url }")
+        def delete(clusters, cookbook, version = nil, options = {})
+          clusters.each do |name, cluster|
+            if version.nil?
+              yield "Deleting all versions of #{ cookbook } from #{ cluster.server_url }" if block_given?
               cluster.client.cookbook.delete_all(cookbook, options)
             else
-              Cleaver::Log.info("Deleting version #{ version } of #{ cookbook } from #{ cluster.server_url }")
+              yield "Deleting version #{ version } of #{ cookbook } from #{ cluster.server_url }" if block_given?
               cluster.client.cookbook.delete(cookbook, version, options)
             end
           end
         end
 
-        def delete_all(clusters, options={})
-          filter_clusters(clusters, options).each do |name, cluster|
-            cluster.client.cookbook.all.each do |name, versions|
-              Cleaver::Log.info("Deleting all versions of #{ name } from
-         #{ cluster.server_url }")
-              cluster.client.cookbook.delete_all(name, options)
+        def delete_all(clusters, options = {})
+          clusters.each do |name, cluster|
+            cluster.client.cookbook.all.each do |cookbook, versions|
+              yield "Deleting all versions of #{ cookbook } from #{ cluster.server_url }" if block_given?
+              cluster.client.cookbook.delete_all(cookbook, options)
             end
           end
         end
 
         def clear
-          Cleaver::Model::Cookbook.storage_path.each_child {|c| FileUtils.rm_rf(c)}
-          Cleaver::Log.info("Cookbook cache cleared")
-        end
-
-        def filter_clusters(clusters, options={})
-          return clusters if(options[:cluster].nil? || options[:cluster].empty?)
-
-          _clusters = {}
-          options[:cluster].each do |name|
-            _clusters[name.to_sym] = clusters[name] if(clusters.include?(name))
-          end
-
-          _clusters
+          Cleaver::Model::Cookbook.storage_path.each_child { |c| FileUtils.rm_rf(c) }
+          yield "Cookbook cache cleared" if block_given?
         end
 
         ## Boosted from https://github.com/berkshelf/berkshelf/blob/ <<
         # dc1638c979ded01123d3c0669118f00a96fb1cbf/lib/berkshelf/berksfile.rb#L676
         ## ref github/tags/3.0.0.beta5
-        def filter_cookbooks(cookbooks, options={})
-          unless options[:cookbook].nil? || options[:cookbook].empty?
-            explicit = cookbooks.select { |cookbook| options[:cookbook].include?(cookbook.cookbook_name) }
+        def filter_cookbooks(cookbooks, options = {})
+          unless options["cookbook"].nil? || options["cookbook"].empty?
+            explicit = cookbooks.select { |cookbook| options["cookbook"].include?(cookbook.cookbook_name) }
 
-            unless(options[:ignore_dependencies])
+            unless options["ignore_dependencies"]
               explicit.each do |cookbook|
                 cookbook.dependencies.each do |name, version|
-                  explicit += cookbooks.select { |cookbook| cookbook.cookbook_name == name }
+                  explicit += cookbooks.select { |dependency| dependency.cookbook_name == name }
                 end
               end
             end

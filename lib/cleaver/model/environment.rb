@@ -7,19 +7,22 @@ require "pathname"
 
 module Cleaver
   module Model
+    ##
+    # Environment Entity
+    ##
     class Environment < Cleaver::Model::Entity
       class << self
         def load(name)
           source = IO.read(storage_path.join("#{ name }.json"))
-          Environment.new(name, JSON.parse(source, :symbolize_names => true))
+          collection[name] = Environment.new(name, JSON.parse(source, :symbolize_names => true))
         end
 
         def load_all
-          Hash[Dir.glob(storage_path.join("*.json")).map { |file|
+          Hash[Dir.glob(storage_path.join("*.json")).map do |file|
             name = File.basename(file, ".json")
 
-            [ name, load(name) ]
-          }]
+            [name, load(name)]
+          end]
         end
 
         def exist?(name)
@@ -34,7 +37,7 @@ module Cleaver
           FileUtils.mkdir_p(storage_path, :mode => 0755)
 
           unless File.writable?(storage_path)
-            raise InsufficientPrivledges, "You do not have permission to write to '#{storage_path}'! " <<
+            fail Cleaver::Error, "You do not have permission to write to '#{storage_path}'! " <<
             "Please either chown the directory or use a different location."
           end
         end
@@ -46,15 +49,15 @@ module Cleaver
 
       export :name, :description, :cookbooks
 
-      def initialize(name, options={})
+      def initialize(name, options = {})
         @name = name
         @description = options[:description] || "Version #{ name }"
         @cookbooks = options[:cookbooks] || {}
       end
 
-      def ==(compare)
-        return false unless(compare.is_a?(Environment))
-        cookbooks == compare.cookbooks
+      def ==(other)
+        return false unless other.is_a?(Environment)
+        cookbooks == other.cookbooks
       end
 
       def file_path
@@ -84,7 +87,7 @@ module Cleaver
         {
           :name => name.gsub(".", "_"),
           :description => description,
-          :cookbook_versions => Hash[@cookbooks.map {|c| [c[0], "= #{c[1][:version]}"] }]
+          :cookbook_versions => Hash[@cookbooks.map { |c| [c[0], "= #{c[1][:version]}"] }]
         }
       end
 

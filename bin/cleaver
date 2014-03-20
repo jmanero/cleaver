@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby
 
-lib = File.expand_path('../../lib', __FILE__)
+lib = File.expand_path("../../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
 require "cleaver"
 
-Cleaver::CLI::Tasks.start(ARGV)
+Cleaver::Model.from_file
+Cleaver::Tasks::Base.start(ARGV)
