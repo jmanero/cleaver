@@ -34,21 +34,11 @@ module Cleaver
         end
 
         def delete(name, cookbook, version = nil, options = {})
-          clusters = select_clusters(name, options)
-
-          yield "Deleting cookbook #{cookbook}" + (version.nil? ? "" : "@#{ version }") +
-          " from universe #{ name }" if block_given?
-
-          Control::Cookbook.delete(clusters, cookbook, version, options)
-          yield "Cookbook deleted" if block_given?
+          Control::Cookbook.delete(select_clusters(name, options), cookbook, version, options)
         end
 
         def delete_all(options = {}, &block)
-          clusters = select_clusters(name, options)
-
-          yield "Deleting all cookbooks from universe #{ name }" if block_given?
-          Control::Cookbook.delete_all(clusters, options)
-          yield "Cookbooks deleted" if block_given?
+          Control::Cookbook.delete_all(select_clusters(name, options), options, &block)
         end
 
         def exist?(name)

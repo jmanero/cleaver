@@ -1,3 +1,4 @@
+require "colorize"
 require "thor"
 require "cleaver/control/universe"
 require "cleaver/tasks/cookbook"
@@ -18,6 +19,8 @@ module Cleaver
       desc "show UNIVERSE", "Show all nodes in the universe"
       def show(name)
         find_and_print_nodes(name)
+      rescue Cleaver::Error => e
+        Cleaver.log.error(e)
       end
 
       ##
@@ -28,10 +31,12 @@ module Cleaver
       desc "apply UNIVERSE VERSION", "Set universe nodes' environments to VERSION"
 
       def apply(name, version, *selected_nodes)
+        Control::Universe.exist?(name)
+
         say "Updating the following nodes to environment #{ version }:"
         nodes = find_and_print_nodes(name, options, selected_nodes.flatten)
 
-        are_you_sure?("Continue updating nodes?")
+        are_you_sure?("Continue updating nodes?") unless options["force"]
         Control::Universe.apply(name, version, nodes, options) { |m| Cleaver.log.info(m) }
       rescue Cleaver::Error => e
         Cleaver.log.error(e)
@@ -45,13 +50,15 @@ module Cleaver
       desc "migrate UNIVERSE FROM TO", "Set universe nodes' currently in environment FROM to environment TO"
 
       def migrate(name, from_version, to_version, *selected_nodes)
+        Control::Universe.exist?(name)
+
         say "Updating the following nodes from environment #{ from_version } to environment #{ to_version }:"
         options = self.options.dup
         options["search"] = "chef_environment:#{ from_version.gsub(".", "_") } #{ options["search"] }"
 
         nodes = find_and_print_nodes(name, options, selected_nodes.flatten)
 
-        are_you_sure?("Continue updating nodes?")
+        are_you_sure?("Continue updating nodes?") unless options["force"]
         Control::Universe.apply(name, to_version, nodes, options) { |m| Cleaver.log.info(m) }
       end
 
@@ -80,7 +87,13 @@ module Cleaver
       desc "delete UNIVERSE COOKBOOK [VERSION]", "Remove a cookbook from the universe's chef servers"
 
       def delete(name, cookbook, version = nil)
+        Control::Universe.exist?(name)
+
+        Cleaver.log.info("Deleting cookbook #{cookbook}" + (version.nil? ? "" : "@#{ version }") + " from universe #{ name }")
+        are_you_sure?("Continue deleting cookbook(s)?") unless options["force"]
+
         Control::Universe.delete(name, cookbook, version, options) { |m| Cleaver.log.info(m) }
+        Cleaver.log.info("Cookbook deleted")
       rescue Cleaver::Error => e
         Cleaver.log.error(e)
       end
@@ -92,12 +105,18 @@ module Cleaver
       desc "delete_all UNIVERSE", "Remove all cookbooks from the universe's chef servers"
 
       def delete_all(name)
+        Control::Universe.exist?(name)
+
+        Cleaver.log.info("Deleting all cookbooks from universe #{ name }")
+        are_you_sure?("Continue deleting all cookbooks?") unless options["force"]
+
         Control::Universe.delete_all(name, options) { |m| Cleaver.log.info(m) }
+        Cleaver.log.info("Cookbooks deleted")
       rescue Cleaver::Error => e
         Cleaver.log.error(e)
       end
 
-      ## Rwgister Submodules
+      ## Register Submodules
       register Cleaver::Tasks::Cookbook, :cookbook, "cookbook <COMMAND>", "Manage cookbooks"
       register Cleaver::Tasks::Environment, :env, "env <COMMAND>", "Manage environments"
 
@@ -118,9 +137,9 @@ module Cleaver
             nodes.push(*cluster_nodes)
 
             say " -------- Cluster #{ _ } (#{ cluster.client.server_url }) --------".green
-            cluster_nodes.each do |node|
-              
-              printf "   %-18s %-16s %d\n", node.name, node.chef_environment, 0
+            printf "   %-24s %-16s %s\n".blue, "Node Name", "Version", "Last Checkin"
+            cluster_nodes.sort { |a,b| a.name <=> b.name}.each do |node|
+              printf "   %-24s %-16s %s\n", node.name, node.chef_environment, calculate_last_run(node["automatic"]["ohai_time"])
             end
 
             say " ----------------".green
@@ -134,6 +153,33 @@ module Cleaver
       def are_you_sure?(message = "Continue operation?")
         said = ask "#{ message } [y/n]"
         fail Cleaver::Error, "User aborted operation" unless said == "y"
+      end
+
+      ### https://github.com/opscode/chef/blob/master/lib/chef/knife/status.rb
+      def calculate_last_run(ohai_time)
+        hours, minutes, seconds = time_difference_in_hms(ohai_time)
+        interval = ""
+        interval += "#{ hours }h " unless hours == 0
+        interval += "#{ minutes }m " unless hours == 0 && minutes == 0
+        interval += "#{ seconds }s"
+
+        color = case
+          when hours >= 1 then :red
+          when minutes >= 10 then :yellow
+          else :green
+        end
+        
+        interval.send(color)
+      end
+
+      def time_difference_in_hms(unix_time)
+        now = Time.now.to_i
+        difference = now - unix_time.to_i
+        hours = (difference / 3600).to_i
+        difference = difference % 3600
+        minutes = (difference / 60).to_i
+        seconds = (difference % 60)
+        return [hours, minutes, seconds]
       end
     end
   end
