@@ -3,6 +3,7 @@ require "thor"
 require "cleaver/control/universe"
 require "cleaver/tasks/cookbook"
 require "cleaver/tasks/environment"
+require "cleaver/tasks/node"
 
 module Cleaver
   module Tasks
@@ -119,6 +120,7 @@ module Cleaver
       ## Register Submodules
       register Cleaver::Tasks::Cookbook, :cookbook, "cookbook <COMMAND>", "Manage cookbooks"
       register Cleaver::Tasks::Environment, :env, "env <COMMAND>", "Manage environments"
+      register Cleaver::Tasks::Node, :node, "node UNIVERSE CLUSTER <COMMAND>", "Manage environments"
 
       private
 
@@ -136,13 +138,17 @@ module Cleaver
           unless cluster_nodes.nil? || cluster_nodes.empty?
             nodes.push(*cluster_nodes)
 
-            say " -------- Cluster #{ _ } (#{ cluster.client.server_url }) --------".green
-            printf "   %-24s %-16s %s\n".blue, "Node Name", "Version", "Last Checkin"
-            cluster_nodes.sort { |a,b| a.name <=> b.name}.each do |node|
-              printf "   %-24s %-16s %s\n", node.name, node.chef_environment, calculate_last_run(node["automatic"]["ohai_time"])
+            say " -------- Cluster #{ _ } (#{ cluster.client.server_url }) --------".white
+            printf "   %-24s %-16s %-12s %-18s %s\n".blue, "Node Name", "Version", "Type", "Last Checkin", "Run List"
+            cluster_nodes.sort { |a, b| a.name <=> b.name }.each do |node|
+              type = node["normal"]["cleaver"]["type"] rescue nil
+              last_run, color = calculate_last_run(node["automatic"]["ohai_time"])
+              run_list = node["run_list"].join(", ")
+
+              printf "   %-24s %-16s %-12s %-18s %s\n".send(color), node.name, node.chef_environment, type, last_run, run_list
             end
 
-            say " ----------------".green
+            say " ----------------".white
             puts ""
           end
         end
@@ -168,8 +174,8 @@ module Cleaver
           when minutes >= 10 then :yellow
           else :green
         end
-        
-        interval.send(color)
+
+        [interval, color]
       end
 
       def time_difference_in_hms(unix_time)
@@ -179,7 +185,8 @@ module Cleaver
         difference = difference % 3600
         minutes = (difference / 60).to_i
         seconds = (difference % 60)
-        return [hours, minutes, seconds]
+
+        [hours, minutes, seconds]
       end
     end
   end

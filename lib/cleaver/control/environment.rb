@@ -1,6 +1,3 @@
-##
-# Class: Cleaver::Control::Cookbook
-#
 require "thor"
 require "thor-scmversion"
 require "cleaver/control/cookbook"
@@ -58,7 +55,7 @@ module Cleaver
             end
           end
         end
-        
+
         def latest
           current_version
         end

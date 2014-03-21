@@ -6,6 +6,7 @@ require "json"
 require "cleaver/model/helpers"
 require "cleaver/model/cookbook"
 require "cleaver/model/environment"
+require "cleaver/model/type"
 require "cleaver/model/universe"
 
 module Cleaver
@@ -14,6 +15,7 @@ module Cleaver
   ##
   module Model
     extend Cleaver::Model::Cookbook::DSL
+    extend Cleaver::Model::Type::DSL
     extend Cleaver::Model::Universe::DSL
     class << self
       extend Model::Helpers
@@ -34,6 +36,7 @@ module Cleaver
 
         Model::Cookbook.initialize_filesystem
         Model::Environment.initialize_filesystem
+        Model::Type.initialize_filesystem
 
         ## Load Cleaverfile DSL
         instance_exec do

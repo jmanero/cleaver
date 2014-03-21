@@ -1,6 +1,3 @@
-##
-# Class: Cleaver::Model::Universe
-#
 require "cleaver/model/cluster"
 require "cleaver/model/entity"
 

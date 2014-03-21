@@ -1,6 +1,3 @@
-##
-# Class: Cleaver::Model::Environment
-#
 require "fileutils"
 require "json"
 require "pathname"
@@ -49,7 +46,7 @@ module Cleaver
       attribute :cookbooks
 
       export :name, :description, :cookbooks
-      
+
       attr_reader :version
 
       def initialize(name, options = {})

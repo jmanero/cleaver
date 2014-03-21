@@ -28,8 +28,8 @@ module Cleaver
       end
 
       ## Create an alias to a receiver in another instance
-      def dispatch(name, delegate, ualias = nil, &cblock)
-        receiver = (ualias || name).to_sym
+      def dispatch(name, delegate, delegate_alias = nil, &result_handle)
+        receiver = (delegate_alias || name).to_sym
         target = if delegate.is_a?(Module)
           delegate ## Module/Class dispatch
         else
@@ -39,7 +39,7 @@ module Cleaver
 
         define_method(name.to_sym) do |*args, &block|
           result = target.send(receiver, *args, &block)
-          instance_exec(result, &cblock) if cblock
+          instance_exec(result, &result_handle) if result_handle
         end
       end
 

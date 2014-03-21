@@ -25,6 +25,7 @@ Gem::Specification.new do |spec|
 
 
   spec.add_runtime_dependency "berkshelf", "= 2.0.12"
+  spec.add_runtime_dependency "chef"
   spec.add_runtime_dependency "colorize"
   spec.add_runtime_dependency "growl"
   spec.add_runtime_dependency "ridley", "= 1.5.3"
